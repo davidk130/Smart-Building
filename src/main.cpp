@@ -4,7 +4,7 @@
 #include <time.h>
 #include <SPI.h>
 #include <MFRC522.h>
-#include "Servo/Servo.h"
+#include <Servo.h>
 // eigene Komponenten
 #include "IOComponent.h"
 #include "TemperatureSensor.h"

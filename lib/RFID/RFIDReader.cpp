@@ -1,7 +1,7 @@
 #include <Arduino.h>
 #include <SPI.h>
 #include <MFRC522.h>
-#include "Servo/Servo.h"
+#include <Servo.h>
 #include "RFIDReader.h"
 
 RFIDReader::RFIDReader(byte ssPin, byte rstPin, Servo& servo)
