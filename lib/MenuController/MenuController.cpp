@@ -48,4 +48,4 @@ void MenuController::handle() {
 
 bool MenuController::isGasEnabled() {
     return gasEnabled;
-}
+} 
