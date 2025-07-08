@@ -4,7 +4,7 @@ MQTTClient::MQTTClient(TemperatureSensor* sensor)
     : client(espClient), tempSensor(sensor), lastSendTime(0) {}
 
 void MQTTClient::begin() {
-    client.setServer(mqtt_server, mqtt_port);
+     client.setServer(mqtt_server, mqtt_port);
 }
 
 void MQTTClient::reconnect() {
