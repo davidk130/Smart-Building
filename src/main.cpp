@@ -116,8 +116,10 @@ void loop() {
     static unsigned long alarmTimestamp = 0;
 
     // Komponenten-Handler (inkl. Menücontroller, der Buttons prüft)
-    for (auto* component : components) {
-        component->handle();
+    for (size_t i = 0; i < components.size(); ++i) {
+        Serial.print("Handle Komponente: "); Serial.println(i);
+        components[i]->handle();
+        Serial.print("Fertig Komponente: "); Serial.println(i);
     }
 
     // Gassensorwarnung nur wenn im Menü aktiviert
