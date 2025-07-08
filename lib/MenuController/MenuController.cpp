@@ -27,6 +27,8 @@ void MenuController::handle() {
     if (rightState == LOW && lastRightState == HIGH) {
         if (menuIndex == 0) {
             lcd->showMessage("IP:", WiFi.localIP().toString());
+            delay(1500); // Kurze Anzeige der IP-Adresse
+            lcd->showMessage("Menü:", menuItems[menuIndex]); // Zurück zum Menü
         } else if (menuIndex == 1) {
             if (led->isOn()) {
                 led->turnOff();
@@ -35,9 +37,13 @@ void MenuController::handle() {
                 led->turnOn();
                 lcd->showMessage("LED:", "ein");
             }
+            delay(500); // Anzeige kurz halten
+            lcd->showMessage("Menü:", menuItems[menuIndex]);
         } else if (menuIndex == 2) {
             gasEnabled = !gasEnabled;
             lcd->showMessage("Gas-Alarm:", gasEnabled ? "aktiv" : "inaktiv");
+            delay(500); // Anzeige kurz halten
+            lcd->showMessage("Menü:", menuItems[menuIndex]);
         }
         delay(200);
     }
@@ -48,4 +54,4 @@ void MenuController::handle() {
 
 bool MenuController::isGasEnabled() {
     return gasEnabled;
-} 
+}
