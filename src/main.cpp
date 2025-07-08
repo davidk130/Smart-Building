@@ -10,11 +10,11 @@
 #include <LED.h>
 #include <LCDDisplay.h>
 #include <MenuController.h>
-#include <MQTTClient.h>  // NEU
+#include <MQTTClient.h>
 
 // WLAN-Zugangsdaten
-const char* ssid = "TP-Link_A800";
-const char* password = "65256848";
+const char* ssid = "iPhone von David";
+const char* password = "12345678";
 bool isConnected = false;
 
 // zentrale Komponentenliste
@@ -76,37 +76,38 @@ void setup() {
         Serial.print("IP-Adresse: ");
         Serial.println(WiFi.localIP());
 
-        syncTime(); // Zeit setzen
+        syncTime();
     } else {
         isConnected = false;
         Serial.println("\n⚠️ WLAN-Verbindung fehlgeschlagen – Gerät läuft offline");
     }
 
-    // Komponenten
-    tempSensor = new TemperatureSensor(17, DHT22); // DHT an GPIO 17
+    // Komponenten erstellen & registrieren
+    tempSensor = new TemperatureSensor(17, DHT22);
     addComponent(tempSensor);
 
-    gas = new GasSensor(23); // digitaler Gassensor an GPIO 23 (D0)
+    gas = new GasSensor(23);
     addComponent(gas);
 
-    led = new LED(12); // LED an GPIO 12
+    led = new LED(12);
     addComponent(led);
 
     lcd = new LCDDisplay();
     addComponent(lcd);
 
+    menu = new MenuController(16, 27, lcd, led, gas);  // NEU: gas mitgeben
+    addComponent(menu);
+
+    if (isConnected) {
+        mqtt = new MQTTClient(tempSensor);
+        addComponent(mqtt);
+    }
+
+    // Anzeige erst ganz am Ende – wird nicht vom Menü überschrieben
     if (isConnected) {
         lcd->showMessage("IP:", WiFi.localIP().toString());
     } else {
         lcd->showMessage("WLAN Fehler", "Offline-Betrieb");
-    }
-
-    menu = new MenuController(16, 27, lcd, led); // Taster an GPIO 16 (links), 27 (rechts)
-    addComponent(menu);
-
-    if (isConnected) {
-        mqtt = new MQTTClient(tempSensor);  // MQTT nur wenn online
-        addComponent(mqtt);
     }
 }
 
@@ -115,7 +116,8 @@ void loop() {
         component->handle();
     }
 
-    if (gas->isGasDetected()) {
+    // Gassensorwarnung nur wenn im Menü aktiviert
+    if (gas->isGasDetected() && menu->isGasEnabled()) {
         led->turnOn();
         lcd->showMessage("GASALARM!", "D0 HIGH");
         Serial.println("🚨 Gas erkannt! Alarm aktiviert.");
