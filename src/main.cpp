@@ -2,13 +2,17 @@
 #include <vector>
 #include <WiFi.h>
 #include <time.h>
+#include <SPI.h>
+#include <MFRC522.h>
+#include "Servo/Servo.h"
 // eigene Komponenten
-#include <IOComponent.h>
-#include <TemperatureSensor.h>
-#include <GasSensor.h>
-#include <LED.h>
-#include <LCDDisplay.h>
-#include <MenuController.h>
+#include "IOComponent.h"
+#include "TemperatureSensor.h"
+#include "GasSensor.h"
+#include "LED.h"
+#include "LCDDisplay.h"
+#include "MenuController.h"
+#include "RFIDReader.h"
 // WLAN-Zugangsdaten
 const char* ssid = "iPhone von David";
 const char* password = "12345678";
@@ -21,6 +25,8 @@ LED* led;
 LCDDisplay* lcd;
 MenuController* menu;
 TemperatureSensor* tempSensor;
+Servo doorServo; // Servo-Objekt für die Tür
+RFIDReader* rfidReader; // Zeiger auf RFIDReader
 // zentrale Registrierung
 void addComponent(IOComponent* component) {
 component->begin();
@@ -84,7 +90,12 @@ lcd = new LCDDisplay();
 addComponent(lcd);
 menu = new MenuController(16, 27, lcd, led, gas, tempSensor); // NEU: gas und tempSensor mitgeben
 addComponent(menu);
- // Anzeige erst ganz am Ende – wird nicht vom Menü überschrieben
+ // RFID-Servo initialisieren und an Pin anschließen (z.B. Pin 18)
+doorServo.attach(18);
+rfidReader = new RFIDReader(21, 22, doorServo); // SS=21, RST=22, Servo-Referenz
+addComponent(rfidReader);
+
+// Anzeige erst ganz am Ende – wird nicht vom Menü überschrieben
 if (isConnected) {
 lcd->showMessage("IP:", WiFi.localIP().toString());
 delay(2000); // IP kurz anzeigen
