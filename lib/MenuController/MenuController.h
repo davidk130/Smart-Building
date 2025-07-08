@@ -38,4 +38,4 @@ public:
     void updateMenuTimeout();
 };
 
-#endif.
+#endif

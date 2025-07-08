@@ -50,7 +50,7 @@ Serial.println("\n⚠️ Zeit konnte nicht synchronisiert werden");
  }
 }
 void setup() {
-Serial.begin(115200);
+    Serial.begin(115200);
  // WLAN verbinden
 WiFi.begin(ssid, password);
 Serial.print("Verbinde mit WLAN...");
@@ -88,16 +88,17 @@ addComponent(mqtt);
 if (isConnected) {
 lcd->showMessage("IP:", WiFi.localIP().toString());
 delay(2000); // IP kurz anzeigen
- // Uhrzeit anzeigen
- struct tm timeinfo;
- if (getLocalTime(&timeinfo)) {
- char buf[16];
- snprintf(buf, sizeof(buf), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
- lcd->showMessage("Uhrzeit", buf);
- }
- } else {
-lcd->showMessage("WLAN Fehler", "Offline-Betrieb");
- }
+
+        // Uhrzeit anzeigen (Initialanzeige, danach übernimmt loop die Aktualisierung)
+        struct tm timeinfo;
+        if (getLocalTime(&timeinfo)) {
+            char buf[16];
+            snprintf(buf, sizeof(buf), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+            lcd->showMessage("Uhrzeit", buf);
+        }
+    } else {
+        lcd->showMessage("WLAN Fehler", "Offline-Betrieb");
+    }
 }
 void loop() {
     static int lastSecond = -1;
