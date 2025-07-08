@@ -10,6 +10,7 @@ class MenuController : public IOComponent {
 private:
     int pinLeft;
     int pinRight;
+
     LCDDisplay* lcd;
     LED* led;
     GasSensor* gas;
@@ -20,14 +21,18 @@ private:
 
     bool gasEnabled;
 
-    String menuItems[3] = {"IP Adresse", "LED Umschalten", "Gas-Alarm"};
+    static const int menuItemCount = 3;
+    String menuItems[menuItemCount];
+
+    unsigned long lastDebounceTime;
+    const unsigned long debounceDelay = 200;
 
 public:
     MenuController(int leftPin, int rightPin, LCDDisplay* lcd, LED* led, GasSensor* gas);
     void begin() override;
     void handle() override;
 
-    bool isGasEnabled();  // für main.cpp
+    bool isGasEnabled();  // Zugriff von außen (z. B. in main.cpp)
 };
 
 #endif

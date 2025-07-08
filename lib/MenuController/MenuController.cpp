@@ -4,42 +4,59 @@
 
 MenuController::MenuController(int leftPin, int rightPin, LCDDisplay* lcd, LED* led, GasSensor* gas)
     : pinLeft(leftPin), pinRight(rightPin), lcd(lcd), led(led), gas(gas),
-      menuIndex(0), lastLeftState(HIGH), lastRightState(HIGH), gasEnabled(true) {}
+      menuIndex(0), lastLeftState(HIGH), lastRightState(HIGH),
+      gasEnabled(true), lastDebounceTime(0) {
+    menuItems[0] = "IP Adresse";
+    menuItems[1] = "LED Umschalten";
+    menuItems[2] = "Gas-Alarm";
+}
 
 void MenuController::begin() {
     pinMode(pinLeft, INPUT_PULLUP);
     pinMode(pinRight, INPUT_PULLUP);
-    // NICHT automatisch anzeigen → IP bleibt beim Start stehen
+    // Optional: Initialanzeige
+    lcd->showMessage("Menü:", menuItems[menuIndex]);
 }
 
 void MenuController::handle() {
+    unsigned long currentMillis = millis();
     int leftState = digitalRead(pinLeft);
     int rightState = digitalRead(pinRight);
 
-    // Menü durchschalten (linker Taster)
-    if (leftState == LOW && lastLeftState == HIGH) {
-        menuIndex = (menuIndex + 1) % 3;
+    // Linker Taster: Navigation
+    if (leftState == LOW && lastLeftState == HIGH && currentMillis - lastDebounceTime > debounceDelay) {
+        menuIndex = (menuIndex + 1) % menuItemCount;
         lcd->showMessage("Menü:", menuItems[menuIndex]);
-        delay(200);
+        lastDebounceTime = currentMillis;
     }
 
-    // Aktion ausführen (rechter Taster)
-    if (rightState == LOW && lastRightState == HIGH) {
-        if (menuIndex == 0) {
-            lcd->showMessage("IP:", WiFi.localIP().toString());
-        } else if (menuIndex == 1) {
-            if (led->isOn()) {
-                led->turnOff();
-                lcd->showMessage("LED:", "aus");
-            } else {
-                led->turnOn();
-                lcd->showMessage("LED:", "ein");
-            }
-        } else if (menuIndex == 2) {
-            gasEnabled = !gasEnabled;
-            lcd->showMessage("Gas-Alarm:", gasEnabled ? "aktiv" : "inaktiv");
+    // Rechter Taster: Aktion ausführen
+    if (rightState == LOW && lastRightState == HIGH && currentMillis - lastDebounceTime > debounceDelay) {
+        switch (menuIndex) {
+            case 0:  // IP-Adresse anzeigen
+                lcd->showMessage("IP:", WiFi.localIP().toString());
+                break;
+
+            case 1:  // LED ein/aus
+                if (led->isOn()) {
+                    led->turnOff();
+                    lcd->showMessage("LED:", "aus");
+                } else {
+                    led->turnOn();
+                    lcd->showMessage("LED:", "ein");
+                }
+                break;
+
+            case 2:  // Gas-Alarm aktiv/inaktiv
+                gasEnabled = !gasEnabled;
+                lcd->showMessage("Gas-Alarm:", gasEnabled ? "aktiv" : "inaktiv");
+                break;
+
+            default:
+                lcd->showMessage("Fehler", "Ungültiger Menüpunkt");
+                break;
         }
-        delay(200);
+        lastDebounceTime = currentMillis;
     }
 
     lastLeftState = leftState;
