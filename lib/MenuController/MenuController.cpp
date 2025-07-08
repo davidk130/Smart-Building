@@ -2,10 +2,11 @@
 #include <WiFi.h>
 #include <Arduino.h>
 
-MenuController::MenuController(int leftPin, int rightPin, LCDDisplay* lcd, LED* led, GasSensor* gas)
-    : pinLeft(leftPin), pinRight(rightPin), lcd(lcd), led(led), gas(gas),
+MenuController::MenuController(int leftPin, int rightPin, LCDDisplay* lcd, LED* led, GasSensor* gas, TemperatureSensor* tempSensor)
+    : pinLeft(leftPin), pinRight(rightPin), lcd(lcd), led(led), gas(gas), tempSensor(tempSensor),
       menuIndex(0), lastLeftState(HIGH), lastRightState(HIGH), gasEnabled(true),
-      menuActive(false), menuTimeout(5000), lastInteraction(0) {}
+      menuActive(false), menuTimeout(5000), lastInteraction(0), 
+      lastLeftPress(0), lastRightPress(0) {}
 
 void MenuController::begin() {
     pinMode(pinLeft, INPUT_PULLUP);
@@ -36,25 +37,36 @@ void MenuController::updateMenuTimeout() {
 void MenuController::handle() {
     int leftState = digitalRead(pinLeft);
     int rightState = digitalRead(pinRight);
+    unsigned long currentTime = millis();
 
-    // Menü aktivieren, wenn ein Taster gedrückt wird
-    if (!menuActive && (leftState == LOW || rightState == LOW)) {
-        activateMenu();
+    // Menü aktivieren, wenn ein Taster gedrückt wird (nur bei fallender Flanke)
+    if (!menuActive) {
+        if ((leftState == LOW && lastLeftState == HIGH && currentTime - lastLeftPress > debounceDelay) ||
+            (rightState == LOW && lastRightState == HIGH && currentTime - lastRightPress > debounceDelay)) {
+            activateMenu();
+            if (leftState == LOW) lastLeftPress = currentTime;
+            if (rightState == LOW) lastRightPress = currentTime;
+        }
     }
 
     if (menuActive) {
         // Menü durchschalten (linker Taster)
-        if (leftState == LOW && lastLeftState == HIGH) {
-            menuIndex = (menuIndex + 1) % 3;
+        if (leftState == LOW && lastLeftState == HIGH && currentTime - lastLeftPress > debounceDelay) {
+            menuIndex = (menuIndex + 1) % 4;
             lcd->showMessage("Menü:", menuItems[menuIndex]);
-            lastInteraction = millis();
+            lastInteraction = currentTime;
+            lastLeftPress = currentTime;
         }
 
         // Aktion ausführen (rechter Taster)
-        if (rightState == LOW && lastRightState == HIGH) {
+        if (rightState == LOW && lastRightState == HIGH && currentTime - lastRightPress > debounceDelay) {
             if (menuIndex == 0) {
-                lcd->showMessage("IP:", WiFi.localIP().toString());
-                lastInteraction = millis();
+                if (WiFi.status() == WL_CONNECTED) {
+                    lcd->showMessage("IP:", WiFi.localIP().toString());
+                } else {
+                    lcd->showMessage("IP:", "Nicht verbunden");
+                }
+                lastInteraction = currentTime;
             } else if (menuIndex == 1) {
                 if (led->isOn()) {
                     led->turnOff();
@@ -63,12 +75,23 @@ void MenuController::handle() {
                     led->turnOn();
                     lcd->showMessage("LED:", "ein");
                 }
-                lastInteraction = millis();
+                lastInteraction = currentTime;
             } else if (menuIndex == 2) {
                 gasEnabled = !gasEnabled;
                 lcd->showMessage("Gas-Alarm:", gasEnabled ? "aktiv" : "inaktiv");
-                lastInteraction = millis();
+                lastInteraction = currentTime;
+            } else if (menuIndex == 3) {
+                // Sensoren-Menü: Temperatur und Gassensor anzeigen
+                if (tempSensor) {
+                    char buf[16];
+                    snprintf(buf, sizeof(buf), "%.1f°C", tempSensor->getTemperature());
+                    lcd->showMessage("Temperatur:", buf);
+                } else {
+                    lcd->showMessage("Temperatur:", "Fehler");
+                }
+                lastInteraction = currentTime;
             }
+            lastRightPress = currentTime;
         }
 
         // Menü nach Timeout verlassen
