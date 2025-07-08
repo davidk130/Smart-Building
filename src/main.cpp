@@ -9,7 +9,6 @@
 #include <LED.h>
 #include <LCDDisplay.h>
 #include <MenuController.h>
-#include <MQTTClient.h>
 // WLAN-Zugangsdaten
 const char* ssid = "iPhone von David";
 const char* password = "12345678";
@@ -22,7 +21,6 @@ LED* led;
 LCDDisplay* lcd;
 MenuController* menu;
 TemperatureSensor* tempSensor;
-MQTTClient* mqtt;
 // zentrale Registrierung
 void addComponent(IOComponent* component) {
 component->begin();
@@ -86,10 +84,6 @@ lcd = new LCDDisplay();
 addComponent(lcd);
 menu = new MenuController(16, 27, lcd, led, gas, tempSensor); // NEU: gas und tempSensor mitgeben
 addComponent(menu);
-if (isConnected) {
-mqtt = new MQTTClient(tempSensor);
-addComponent(mqtt);
- }
  // Anzeige erst ganz am Ende – wird nicht vom Menü überschrieben
 if (isConnected) {
 lcd->showMessage("IP:", WiFi.localIP().toString());
@@ -167,11 +161,11 @@ void loop() {
             unsigned long hours = uptimeSeconds / 3600;
             unsigned long minutes = (uptimeSeconds % 3600) / 60;
             unsigned long seconds = uptimeSeconds % 60;
-            
+
             char buf[16];
             snprintf(buf, sizeof(buf), "%02lu:%02lu:%02lu", hours, minutes, seconds);
-    }       lcd->showMessage("Uptime", buf);
-}           lastUptimeUpdate = millis();
+            lcd->showMessage("Uptime", buf);
+            lastUptimeUpdate = millis();
         }
     }
 }

@@ -17,7 +17,7 @@ void MenuController::begin() {
 void MenuController::activateMenu() {
     menuActive = true;
     lastInteraction = millis();
-    lcd->showMessage("Menü:", menuItems[menuIndex]);
+    lcd->showMessage("Menu:", menuItems[menuIndex]);
 }
 
 void MenuController::deactivateMenu() {
@@ -53,7 +53,7 @@ void MenuController::handle() {
         // Menü durchschalten (linker Taster)
         if (leftState == LOW && lastLeftState == HIGH && currentTime - lastLeftPress > debounceDelay) {
             menuIndex = (menuIndex + 1) % 4;
-            lcd->showMessage("Menü:", menuItems[menuIndex]);
+            lcd->showMessage("Menu:", menuItems[menuIndex]);
             lastInteraction = currentTime;
             lastLeftPress = currentTime;
         }
