@@ -6,6 +6,7 @@
 #include <LED.h>
 #include <GasSensor.h>
 #include <TemperatureSensor.h>
+#include <RFIDReader.h>
 
 class MenuController : public IOComponent {
 private:
@@ -15,6 +16,7 @@ private:
     LED* led;
     GasSensor* gas;
     TemperatureSensor* tempSensor;
+    RFIDReader* rfidReader;
 
     int menuIndex;
     int lastLeftState;
@@ -25,14 +27,14 @@ private:
 
     bool gasEnabled;
 
-    String menuItems[4] = {"IP Adresse", "LED Umschalten", "Gas-Alarm", "Sensoren"};
+    String menuItems[6] = {"IP Adresse", "LED Umschalten", "Gas-Alarm", "Sensoren", "RFID lernen", "RFID entfernen"};
 
     bool menuActive = false;
     unsigned long lastInteraction = 0;
     const unsigned long menuTimeout = 5000; // 5 Sekunden
 
 public:
-    MenuController(int leftPin, int rightPin, LCDDisplay* lcd, LED* led, GasSensor* gas, TemperatureSensor* tempSensor);
+    MenuController(int leftPin, int rightPin, LCDDisplay* lcd, LED* led, GasSensor* gas, TemperatureSensor* tempSensor, RFIDReader* rfidReader);
     void begin() override;
     void handle() override;
 

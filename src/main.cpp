@@ -88,12 +88,12 @@ led = new LED(12);
 addComponent(led);
 lcd = new LCDDisplay();
 addComponent(lcd);
-menu = new MenuController(16, 27, lcd, led, gas, tempSensor); // NEU: gas und tempSensor mitgeben
-addComponent(menu);
  // RFID-Servo initialisieren und an Pin anschließen (z.B. Pin 18)
 doorServo.attach(18);
 rfidReader = new RFIDReader(21, 22, doorServo); // SS=21, RST=22, Servo-Referenz
 addComponent(rfidReader);
+menu = new MenuController(16, 27, lcd, led, gas, tempSensor, rfidReader); // NEU: rfidReader mitgeben
+addComponent(menu);
 
 // Anzeige erst ganz am Ende – wird nicht vom Menü überschrieben
 if (isConnected) {

@@ -2,8 +2,8 @@
 #include <WiFi.h>
 #include <Arduino.h>
 
-MenuController::MenuController(int leftPin, int rightPin, LCDDisplay* lcd, LED* led, GasSensor* gas, TemperatureSensor* tempSensor)
-    : pinLeft(leftPin), pinRight(rightPin), lcd(lcd), led(led), gas(gas), tempSensor(tempSensor),
+MenuController::MenuController(int leftPin, int rightPin, LCDDisplay* lcd, LED* led, GasSensor* gas, TemperatureSensor* tempSensor, RFIDReader* rfidReader)
+    : pinLeft(leftPin), pinRight(rightPin), lcd(lcd), led(led), gas(gas), tempSensor(tempSensor), rfidReader(rfidReader),
       menuIndex(0), lastLeftState(HIGH), lastRightState(HIGH), gasEnabled(true),
       menuActive(false), menuTimeout(5000), lastInteraction(0), 
       lastLeftPress(0), lastRightPress(0) {}
@@ -52,7 +52,7 @@ void MenuController::handle() {
     if (menuActive) {
         // Menü durchschalten (linker Taster)
         if (leftState == LOW && lastLeftState == HIGH && currentTime - lastLeftPress > debounceDelay) {
-            menuIndex = (menuIndex + 1) % 4;
+            menuIndex = (menuIndex + 1) % 6;
             lcd->showMessage("Menu:", menuItems[menuIndex]);
             lastInteraction = currentTime;
             lastLeftPress = currentTime;
@@ -88,6 +88,18 @@ void MenuController::handle() {
                     lcd->showMessage("Temperatur:", buf);
                 } else {
                     lcd->showMessage("Temperatur:", "Fehler");
+                }
+                lastInteraction = currentTime;
+            } else if (menuIndex == 4) {
+                // RFID lernen
+                if (rfidReader) {
+                    rfidReader->setModeLearn(lcd);
+                }
+                lastInteraction = currentTime;
+            } else if (menuIndex == 5) {
+                // RFID entfernen
+                if (rfidReader) {
+                    rfidReader->setModeRemove(lcd);
                 }
                 lastInteraction = currentTime;
             }
