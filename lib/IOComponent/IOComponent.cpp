@@ -1,0 +1,1 @@
+// Diese Datei bleibt leer, da die Klasse nur abstrakt ist
