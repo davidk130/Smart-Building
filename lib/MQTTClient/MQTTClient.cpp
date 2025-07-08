@@ -26,7 +26,9 @@ void MQTTClient::reconnect() {
 
 void MQTTClient::handle() {
     if (!client.connected()) reconnect();
+    Serial.println("Vor client.loop()");
     client.loop();
+    Serial.println("Nach client.loop()");
 
     unsigned long now = millis();
     if (now - lastSendTime > 5 * 60 * 1000 && client.connected()) { // alle 5 Minuten, nur wenn verbunden

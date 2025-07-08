@@ -141,7 +141,9 @@ void loop() {
     // Standardanzeige: Uhrzeit, wenn Menü nicht aktiv und kein Alarm
     if (!menu->isMenuActive() && !alarmActive && isConnected) {
         struct tm timeinfo;
+        Serial.println("Vor getLocalTime");
         if (getLocalTime(&timeinfo)) {
+            Serial.println("Nach getLocalTime");
             if (timeinfo.tm_sec != lastSecond) { // Nur bei Sekundenwechsel aktualisieren
                 char buf[16];
                 snprintf(buf, sizeof(buf), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
@@ -149,6 +151,7 @@ void loop() {
                 lastSecond = timeinfo.tm_sec;
             }
         } else {
+            Serial.println("getLocalTime fehlgeschlagen");
             // Fallback: Zeit konnte nicht abgerufen werden
             static unsigned long lastErrorDisplay = 0;
             if (millis() - lastErrorDisplay > 5000) { // Alle 5 Sekunden anzeigen
@@ -167,8 +170,8 @@ void loop() {
             
             char buf[16];
             snprintf(buf, sizeof(buf), "%02lu:%02lu:%02lu", hours, minutes, seconds);
-            lcd->showMessage("Uptime", buf);
-            lastUptimeUpdate = millis();
+    }       lcd->showMessage("Uptime", buf);
+}           lastUptimeUpdate = millis();
         }
     }
 }
