@@ -22,12 +22,20 @@ private:
 
     String menuItems[3] = {"IP Adresse", "LED Umschalten", "Gas-Alarm"};
 
+    bool menuActive = false;
+    unsigned long lastInteraction = 0;
+    const unsigned long menuTimeout = 5000; // 5 Sekunden
+
 public:
     MenuController(int leftPin, int rightPin, LCDDisplay* lcd, LED* led, GasSensor* gas);
     void begin() override;
     void handle() override;
 
     bool isGasEnabled();  // für main.cpp
+    void activateMenu();
+    void deactivateMenu();
+    bool isMenuActive();
+    void updateMenuTimeout();
 };
 
 #endif.

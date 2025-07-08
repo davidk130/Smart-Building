@@ -87,6 +87,14 @@ addComponent(mqtt);
  // Anzeige erst ganz am Ende – wird nicht vom Menü überschrieben
 if (isConnected) {
 lcd->showMessage("IP:", WiFi.localIP().toString());
+delay(2000); // IP kurz anzeigen
+ // Uhrzeit anzeigen
+ struct tm timeinfo;
+ if (getLocalTime(&timeinfo)) {
+ char buf[16];
+ snprintf(buf, sizeof(buf), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+ lcd->showMessage("Uhrzeit", buf);
+ }
  } else {
 lcd->showMessage("WLAN Fehler", "Offline-Betrieb");
  }
@@ -94,11 +102,21 @@ lcd->showMessage("WLAN Fehler", "Offline-Betrieb");
 void loop() {
 for (auto* component : components) {
 component->handle();
- }
- // Gassensorwarnung nur wenn im Menü aktiviert
+}
+// Standardanzeige: Uhrzeit, wenn Menü nicht aktiv
+if (!menu->isMenuActive()) {
+struct tm timeinfo;
+if (getLocalTime(&timeinfo)) {
+char buf[16];
+snprintf(buf, sizeof(buf), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+lcd->showMessage("Uhrzeit", buf);
+}
+delay(1000); // Uhrzeit nur jede Sekunde aktualisieren
+}
+// Gassensorwarnung nur wenn im Menü aktiviert
 if (gas->isGasDetected() && menu->isGasEnabled()) {
 led->turnOn();
 lcd->showMessage("GASALARM!", "D0 HIGH");
 Serial.println("🚨 Gas erkannt! Alarm aktiviert.");
- }
+}
 }
