@@ -6,6 +6,7 @@
 #include <Servo.h>
 #include "IOComponent.h"
 #include <vector>
+#include "LCDDisplay.h"
 
 class RFIDReader : public IOComponent {
   private:
