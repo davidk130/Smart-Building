@@ -37,57 +37,49 @@ void MenuController::handle() {
     int leftState = digitalRead(pinLeft);
     int rightState = digitalRead(pinRight);
 
-    // Menü nur bedienen, wenn aktiv
-    if (!menuActive) {
-        // Menü aktivieren, wenn ein Taster gedrückt wird
-        if (leftState == LOW || rightState == LOW) {
-            activateMenu();
-            delay(200);
-        }
-        lastLeftState = leftState;
-        lastRightState = rightState;
-        return;
+    // Menü aktivieren, wenn ein Taster gedrückt wird
+    if (!menuActive && (leftState == LOW || rightState == LOW)) {
+        activateMenu();
     }
 
-    // Menü durchschalten (linker Taster)
-    if (leftState == LOW && lastLeftState == HIGH) {
-        menuIndex = (menuIndex + 1) % 3;
-        lcd->showMessage("Menü:", menuItems[menuIndex]);
-        lastInteraction = millis();
-        delay(200);
-    }
-
-    // Aktion ausführen (rechter Taster)
-    if (rightState == LOW && lastRightState == HIGH) {
-        if (menuIndex == 0) {
-            lcd->showMessage("IP:", WiFi.localIP().toString());
-            delay(1500);
+    if (menuActive) {
+        // Menü durchschalten (linker Taster)
+        if (leftState == LOW && lastLeftState == HIGH) {
+            menuIndex = (menuIndex + 1) % 3;
             lcd->showMessage("Menü:", menuItems[menuIndex]);
-        } else if (menuIndex == 1) {
-            if (led->isOn()) {
-                led->turnOff();
-                lcd->showMessage("LED:", "aus");
-            } else {
-                led->turnOn();
-                lcd->showMessage("LED:", "ein");
+            lastInteraction = millis();
+        }
+
+        // Aktion ausführen (rechter Taster)
+        if (rightState == LOW && lastRightState == HIGH) {
+            if (menuIndex == 0) {
+                lcd->showMessage("IP:", WiFi.localIP().toString());
+                lastInteraction = millis();
+            } else if (menuIndex == 1) {
+                if (led->isOn()) {
+                    led->turnOff();
+                    lcd->showMessage("LED:", "aus");
+                } else {
+                    led->turnOn();
+                    lcd->showMessage("LED:", "ein");
+                }
+                lastInteraction = millis();
+            } else if (menuIndex == 2) {
+                gasEnabled = !gasEnabled;
+                lcd->showMessage("Gas-Alarm:", gasEnabled ? "aktiv" : "inaktiv");
+                lastInteraction = millis();
             }
-            delay(500);
-            lcd->showMessage("Menü:", menuItems[menuIndex]);
-        } else if (menuIndex == 2) {
-            gasEnabled = !gasEnabled;
-            lcd->showMessage("Gas-Alarm:", gasEnabled ? "aktiv" : "inaktiv");
-            delay(500);
-            lcd->showMessage("Menü:", menuItems[menuIndex]);
         }
-        lastInteraction = millis();
-        delay(200);
+
+        // Menü nach Timeout verlassen
+        updateMenuTimeout();
+        if (!menuActive) {
+            // Menü wurde verlassen, Anzeige wird von main.cpp übernommen
+        }
     }
 
     lastLeftState = leftState;
     lastRightState = rightState;
-
-    // Menü nach Timeout verlassen
-    updateMenuTimeout();
 }
 
 bool MenuController::isGasEnabled() {

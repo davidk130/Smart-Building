@@ -122,16 +122,6 @@ void loop() {
         if (alarmActive && millis() - alarmTimestamp > 2000) { // Alarmanzeige 2s, dann zurück
             alarmActive = false;
             led->turnOff();
-            // Nach Alarm zurück zur Uhrzeit (falls Menü nicht aktiv)
-            if (!menu->isMenuActive()) {
-                struct tm timeinfo;
-                if (getLocalTime(&timeinfo)) {
-                    char buf[16];
-                    snprintf(buf, sizeof(buf), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-                    lcd->showMessage("Uhrzeit", buf);
-                    lastSecond = timeinfo.tm_sec;
-                }
-            }
         }
     }
 
@@ -147,6 +137,4 @@ void loop() {
             }
         }
     }
-
-    // Kein delay! Buttons werden im MenuController immer geprüft.
 }
