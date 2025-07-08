@@ -100,23 +100,43 @@ lcd->showMessage("WLAN Fehler", "Offline-Betrieb");
  }
 }
 void loop() {
-for (auto* component : components) {
-component->handle();
-}
-// Standardanzeige: Uhrzeit, wenn Menü nicht aktiv
-if (!menu->isMenuActive()) {
-struct tm timeinfo;
-if (getLocalTime(&timeinfo)) {
-char buf[16];
-snprintf(buf, sizeof(buf), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
-lcd->showMessage("Uhrzeit", buf);
-}
-delay(1000); // Uhrzeit nur jede Sekunde aktualisieren
-}
-// Gassensorwarnung nur wenn im Menü aktiviert
-if (gas->isGasDetected() && menu->isGasEnabled()) {
-led->turnOn();
-lcd->showMessage("GASALARM!", "D0 HIGH");
-Serial.println("🚨 Gas erkannt! Alarm aktiviert.");
-}
+    static unsigned long lastClockUpdate = 0;
+    static int lastSecond = -1;
+    static bool alarmActive = false;
+    static unsigned long alarmTimestamp = 0;
+
+    for (auto* component : components) {
+        component->handle();
+    }
+
+    // Gassensorwarnung nur wenn im Menü aktiviert
+    if (gas->isGasDetected() && menu->isGasEnabled()) {
+        if (!alarmActive) {
+            led->turnOn();
+            lcd->showMessage("GASALARM!", "D0 HIGH");
+            Serial.println("🚨 Gas erkannt! Alarm aktiviert.");
+            alarmActive = true;
+            alarmTimestamp = millis();
+        }
+    } else {
+        if (alarmActive && millis() - alarmTimestamp > 2000) { // Alarmanzeige 2s, dann zurück
+            alarmActive = false;
+            led->turnOff();
+        }
+    }
+
+    // Standardanzeige: Uhrzeit, wenn Menü nicht aktiv und kein Alarm
+    if (!menu->isMenuActive() && !alarmActive) {
+        struct tm timeinfo;
+        if (getLocalTime(&timeinfo)) {
+            if (timeinfo.tm_sec != lastSecond) { // Nur bei Sekundenwechsel aktualisieren
+                char buf[16];
+                snprintf(buf, sizeof(buf), "%02d:%02d:%02d", timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
+                lcd->showMessage("Uhrzeit", buf);
+                lastSecond = timeinfo.tm_sec;
+            }
+        }
+    }
+
+    // Kein delay(1000) mehr, damit Buttons immer schnell reagieren!
 }
